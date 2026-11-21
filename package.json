@@ -1,0 +1,25 @@
+{
+  "name": "bash-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Project Bash: Stealth Native Desktop AI Interview Copilot",
+  "scripts": {
+    "typecheck": "tsc -b",
+    "build": "tsc -b",
+    "dev:server": "pnpm --filter @bash/server dev",
+    "dev:desktop": "pnpm --filter @bash/desktop dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.13.4",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.5.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.73.0"
+  }
+}

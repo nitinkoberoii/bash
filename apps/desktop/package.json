@@ -1,0 +1,14 @@
+{
+  "name": "@bash/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "echo 'Desktop dev placeholder (Milestone 0.1)'"
+  },
+  "dependencies": {
+    "@bash/shared": "workspace:*"
+  }
+}
