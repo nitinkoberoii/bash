@@ -5,7 +5,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/release/**', '**/*.tsbuildinfo'],
+    ignores: [
+      '**/dist/**',
+      '**/dist-electron/**',
+      '**/node_modules/**',
+      '**/release/**',
+      '**/*.tsbuildinfo',
+    ],
   },
   {
     rules: {

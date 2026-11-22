@@ -2,13 +2,27 @@
   "name": "@bash/desktop",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "main": "./dist/index.js",
+  "main": "dist-electron/main.js",
   "scripts": {
-    "build": "tsc -b",
-    "dev": "echo 'Desktop dev placeholder (Milestone 0.1)'"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@bash/shared": "workspace:*"
+    "@bash/shared": "workspace:*",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.7.0",
+    "electron": "^45.4.1",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.3.8",
+    "vite-plugin-electron": "^1.2.0",
+    "vite-plugin-electron-renderer": "^1.0.0"
   }
 }

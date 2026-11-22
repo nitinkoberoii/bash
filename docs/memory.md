@@ -6,9 +6,9 @@
 
 **Last Updated:** 2026-11-22
 
-**Current Phase:** Phase 0 Complete — Gate Verified (Ready for Phase 1)
+**Current Phase:** Phase 1 — Milestone 1.1 Complete (Ready for Milestone 1.2)
 
-**Next Action:** Advance to **Phase 1 — Milestone 1.1 (Third-Party Packages & Desktop Boilerplate: Electron, Vite, React, Tailwind CSS)**
+**Next Action:** Advance to **Phase 1 — Milestone 1.2 (Stealth Overlay BrowserWindow: setContentProtection(true), skipTaskbar, focusable: false, click-through)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -110,11 +110,14 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **Phase 0 Gate Verified:** All Phase 0 Ending Conditions met.
 
+  * **Completed Milestone 1.1 (Third-Party Packages & Desktop Boilerplate):** Scaffolded `apps/desktop` with `electron`, `vite`, `react`, `react-dom`, `tailwindcss`, `vite-plugin-electron/simple`, `postcss`, and `autoprefixer`. Configured Electron Main process with single-instance lock (`app.requestSingleInstanceLock()`), Preload script with typed `contextBridge`, React 19 root with Tailwind CSS styling, and Vite dev/build workflows. Verified duplicate instance rejection, second-instance IPC focus signaling, clean build artifacts, and passing monorepo-wide typecheck/lint.
+
 * **What We Need to Do Right Now:**
 
-  1. Review Phase 0 Learning Checkpoint with user.
-
-  2. Begin **Phase 1 — Milestone 1.1: Third-Party Packages & Desktop Boilerplate** (scaffold `apps/desktop` with `electron`, `vite`, `react`, `react-dom`, and `tailwindcss`; configure hot-reload and single-instance lock).
+  * Advance to **Phase 1 — Milestone 1.2: Stealth Overlay BrowserWindow (Main Process)**:
+    * Configure the frameless, transparent `BrowserWindow` with `alwaysOnTop: true`, `skipTaskbar: true`, `focusable: false`, and `hasShadow: false`.
+    * Enable OS-level screen-capture exclusion via `overlayWindow.setContentProtection(true)`.
+    * Implement click-through defaults using `setIgnoreMouseEvents(true, { forward: true })`.
 
 * **Active Blockers / Open Decisions:**
 
@@ -146,9 +149,9 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **Gate:** Phase 0 Ending Conditions & Learning Checkpoint Verified
 
-### Phase 1: Electron Desktop Shell & Screen-Capture-Excluded Overlay (`Pending`)
+### Phase 1: Electron Desktop Shell & Screen-Capture-Excluded Overlay (`In Progress`)
 
-* `[ ]` **1.1** — Third-Party Packages & Desktop Boilerplate (`electron`, `vite`, `react`, `tailwindcss`)
+* `[x]` **1.1** — Third-Party Packages & Desktop Boilerplate (`electron`, `vite`, `react`, `tailwindcss`)
 
 * `[ ]` **1.2** — Stealth Overlay `BrowserWindow` (`setContentProtection(true)`, `skipTaskbar`, `focusable: false`, click-through)
 
@@ -225,7 +228,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 * `docker-compose.yml` — Container definition for local MongoDB 7.0 development (`bash_mongodb`) with healthcheck and volume persistence.
 * `tsconfig.base.json` — Shared strict compiler options (`NodeNext`, `composite: true`, `strict: true`).
 * `tsconfig.json` — Root project reference coordinator linking all workspace projects for single-command `tsc -b`.
-* `eslint.config.mjs` — ESLint 9 Flat Config with TypeScript integration.
+* `eslint.config.mjs` — ESLint 9 Flat Config with TypeScript integration (ignoring build distribution directories `dist/` and `dist-electron/`).
 * `.prettierrc.json` & `.prettierignore` — Deterministic formatting rules and exclusions.
 * `.gitignore` — Ignore patterns for `node_modules`, build artifacts, `.env` files, and system files.
 
@@ -245,9 +248,16 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
   * `src/config/env.ts` — Strict, fail-fast environment loader validating runtime variables with Zod schemas.
   * `src/index.ts` — Server entry point validating environment and handling typed WebSocket message contracts.
 * `apps/desktop/` — Electron + React desktop workspace (`@bash/desktop`).
-  * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`.
-  * `tsconfig.json` — Project references configuration with DOM lib support.
-  * `src/index.ts` — Desktop entry point validating IPC channel registration and message generation.
+  * `package.json` — Desktop workspace manifest configuring Vite, React 19, Tailwind CSS, and `dist-electron/main.js` entry point.
+  * `vite.config.ts` — Vite build and dev configuration utilizing `@vitejs/plugin-react` and `vite-plugin-electron/simple`.
+  * `tailwind.config.js` & `postcss.config.js` — Utility CSS configuration defining low-glare dark HUD color tokens and PostCSS plugins.
+  * `electron/main.ts` — Main process entry point enforcing `app.requestSingleInstanceLock()`, window lifecycle, and IPC focus restoration.
+  * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` via `contextBridge.exposeInMainWorld`.
+  * `src/main.tsx` — React 19 entry point mounting the root application into `#root`.
+  * `src/App.tsx` — Test overlay HUD component demonstrating HMR state, bridge status, and dark slate styling.
+  * `src/index.css` — Global CSS injecting Tailwind utilities and disabling text selection.
+  * `src/types/electron.d.ts` — TypeScript ambient declaration attaching typed `bashAPI` to `window`.
+  * `tsconfig.json` — Composite TypeScript project references configuration with DOM and React JSX support.
 
 ### Documentation Artifacts
 
@@ -274,9 +284,13 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Phase 0 / 0.2` | Installed core utility packages (`zod`, `dotenv`, `tsx`), created `docker-compose.yml` for local MongoDB 7.0 container with health checks, and built fail-fast Zod-validated `env.ts` loader in `apps/server`. | Verified clean (missing env throws human-readable validation error; valid env boots cleanly with code 0) | 
 | `2026-11-22` | `Phase 0 / 0.3` | Implemented shared protocol contracts in `packages/shared`: `ws-protocol.ts` (discriminated union message types + Zod schemas + type guards), `ipc-channels.ts` (Electron IPC contracts), and `models.ts` (domain DTOs). Verified cross-package consumption in `apps/server` and `apps/desktop`. | Verified clean (`tsc -b`, `eslint .`, `prettier`, and runtime message handler tests passed with code 0) | 
 | `2026-11-22` | `Phase 0 Gate` | Verified all Phase 0 Ending Conditions across monorepo typechecks, cross-package imports, and Zod fail-fast validation. | Phase 0 Complete |
+| `2026-11-22` | `Phase 1 / 1.1` | Scaffolded `apps/desktop` with Electron, Vite, React 19, and Tailwind CSS. Implemented single-instance lock (`app.requestSingleInstanceLock()`), Preload contextBridge, and React overlay component. | Verified clean: automated single-instance lock test (duplicate instance rejected, primary focused, code 0), build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
 * **Windows & pnpm Installations:** Per sandbox policy, pnpm commands that alter packages (`pnpm install`, `pnpm add`) should be run with elevated bypass permissions on Windows to handle hard-link creation cleanly, while verification scripts (`typecheck`, `lint`, `format`) run securely within the sandbox.
 * **pnpm v11 Build Script Approvals:** Modern pnpm enforces security checks on packages that execute build scripts (`esbuild` post-install). Running `pnpm approve-builds --all` registers permanent approval for trusted dependencies.
 * **Prettier Markdown Safety:** Excluded `docs/` and `*.md` from formatting checks in `.prettierignore` to protect LaTeX math formulas (`KaTeX`) and markdown tables from unintended line-wrapping mutations.
+* **`ELECTRON_RUN_AS_NODE` Gotcha:** When executing Electron test commands from IDE-spawned terminal sessions, `ELECTRON_RUN_AS_NODE=1` is inherited from the IDE's environment, causing `electron.exe` to strip all Electron APIs and run as pure Node.js. Child test processes must delete `ELECTRON_RUN_AS_NODE` from `process.env` to run in native Electron app mode.
+* **Electron CommonJS vs ESM Main Entry:** Inside Node.js, `electron`'s npm stub exports an executable path rather than native framework APIs. Compiling the Electron Main process as CommonJS (`formats: ["cjs"]` via `vite-plugin-electron/simple`) allows Electron's internal `Module._load` hook to provide native `app`, `BrowserWindow`, and `shell` APIs seamlessly.
+* **Windows GUI Headless Execution:** Windows GUI applications require an interactive desktop window station (`WinSta0\Default`) to create HWNDs. Running automated Electron launch tests requires running outside the restricted sandbox (`BypassSandbox: true`) with `--no-sandbox` and `--disable-gpu` flags.
