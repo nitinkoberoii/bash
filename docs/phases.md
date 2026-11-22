@@ -77,10 +77,10 @@
 
 ### Phase 1 Ending Conditions (Definition of Done)
 
-* [ ] Launching the app displays a transparent, dark-mode floating card on your physical monitor without appearing on the Windows Taskbar or `Alt+Tab` switcher.
-* [ ] **Screen-Share Verification Test:** Share your entire screen in OBS Studio, Google Meet, or Zoom—the Bash overlay is completely invisible in the capture feed while remaining clearly visible to your eyes.
-* [ ] Clicking over the overlay in `LOCKED` mode passes clicks directly into VS Code underneath without stealing focus or firing browser `blur` events.
-* [ ] Pressing `Ctrl+Shift+I` lets you drag and reposition the overlay; pressing `Ctrl+Shift+H` hides and restores it instantaneously.
+* [ x ] Launching the app displays a transparent, dark-mode floating card on your physical monitor without appearing on the Windows Taskbar or `Alt+Tab` switcher.
+* [ x ] **Screen-Share Verification Test:** Share your entire screen in OBS Studio, Google Meet, or Zoom—the Bash overlay is completely invisible in the capture feed while remaining clearly visible to your eyes.
+* [ x ] Clicking over the overlay in `LOCKED` mode passes clicks directly into VS Code underneath without stealing focus or firing browser `blur` events.
+* [ x ] Pressing `Ctrl+Shift+I` lets you drag and reposition the overlay; pressing `Ctrl+Shift+H` hides and restores it instantaneously.
 
 > **Learning Checkpoint:** Why does Electron separate the Main and Renderer processes, and why is disabling `nodeIntegration` + using `contextBridge` critical for security?
 
