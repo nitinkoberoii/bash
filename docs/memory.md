@@ -6,9 +6,9 @@
 
 **Last Updated:** 2026-11-22
 
-**Current Phase:** Phase 0 — Monorepo Foundation & Shared Contracts
+**Current Phase:** Phase 0 Complete — Gate Verified (Ready for Phase 1)
 
-**Next Action:** Start **Phase 0 — Milestone 0.3 (Shared Protocol Contracts: ws-protocol.ts, ipc-channels.ts, models.ts)**
+**Next Action:** Advance to **Phase 1 — Milestone 1.1 (Third-Party Packages & Desktop Boilerplate: Electron, Vite, React, Tailwind CSS)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -104,11 +104,17 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **Completed Milestone 0.1 (Monorepo & Tooling Setup):** Initialized `pnpm` workspace with `packages/shared`, `apps/desktop`, and `apps/server`. Configured `tsconfig.base.json` and project references (`composite: true`), ESLint 9 + Prettier, root convenience scripts (`typecheck`, `format`, `lint`, `dev:server`).
 
-  * **Completed Milestone 0.2 (Third-Party Packages & Local Infrastructure):** Installed `zod`, `dotenv`, and `tsx`. Created `docker-compose.yml` for local MongoDB 7.0 development. Built strict, fail-fast `env.ts` configuration loader in `apps/server` with Zod validation. Verified human-readable error messages on missing or invalid environment variables.
+  * **Completed Milestone 0.2 (Third-Party Packages & Local Infrastructure):** Installed `zod`, `dotenv`, and `tsx`. Created `docker-compose.yml` for local MongoDB 7.0 container. Built fail-fast `env.ts` configuration loader in `apps/server` with Zod validation.
+
+  * **Completed Milestone 0.3 (Shared Protocol Contracts):** Defined strongly typed discriminated unions for WebSocket control frames in `ws-protocol.ts` (with runtime Zod schemas and type guards), Electron IPC channels and signatures in `ipc-channels.ts`, and core domain DTOs (`TranscriptUtterance`, `HintDTO`, `ProfileDTO`, `UserSettings`, `SessionDTO`) in `models.ts`. Verified cross-package consumption in both `apps/server` and `apps/desktop`.
+
+  * **Phase 0 Gate Verified:** All Phase 0 Ending Conditions met.
 
 * **What We Need to Do Right Now:**
 
-  1. Begin **Phase 0 — Milestone 0.3: Shared Protocol Contracts (`packages/shared`)** (define discriminated unions for WebSocket client/server events in `ws-protocol.ts`, typed Electron IPC channel definitions in `ipc-channels.ts`, and core domain DTOs in `models.ts`).
+  1. Review Phase 0 Learning Checkpoint with user.
+
+  2. Begin **Phase 1 — Milestone 1.1: Third-Party Packages & Desktop Boilerplate** (scaffold `apps/desktop` with `electron`, `vite`, `react`, `react-dom`, and `tailwindcss`; configure hot-reload and single-instance lock).
 
 * **Active Blockers / Open Decisions:**
 
@@ -130,15 +136,15 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **Doc 0.5** — Universal AI Assistant Rules File (`docs/rules.md`)
 
-### Phase 0: Monorepo Foundation & Shared Contracts (`In Progress`)
+### Phase 0: Monorepo Foundation & Shared Contracts (`Completed`)
 
 * `[x]` **0.1** — Monorepo & Tooling Setup (`packages/shared`, `apps/desktop`, `apps/server`)
 
 * `[x]` **0.2** — Third-Party Packages & Local Infrastructure (`zod`, `docker-compose.yml` for MongoDB, `env.ts`)
 
-* `[ ]` **0.3** — Shared Protocol Contracts (`ws-protocol.ts`, `ipc-channels.ts`, `models.ts`)
+* `[x]` **0.3** — Shared Protocol Contracts (`ws-protocol.ts`, `ipc-channels.ts`, `models.ts`)
 
-* `[ ]` **Gate:** Phase 0 Ending Conditions & Learning Checkpoint Verified
+* `[x]` **Gate:** Phase 0 Ending Conditions & Learning Checkpoint Verified
 
 ### Phase 1: Electron Desktop Shell & Screen-Capture-Excluded Overlay (`Pending`)
 
@@ -226,19 +232,22 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 ### Packages & Applications
 
 * `packages/shared/` — Common TypeScript contracts library (`@bash/shared`).
-  * `package.json` — Package configuration exporting ES modules and `.d.ts` types (now includes `zod`).
+  * `package.json` — Package configuration exporting ES modules and `.d.ts` types (with `zod`).
   * `tsconfig.json` — Project references composite TypeScript configuration (`composite: true`).
-  * `src/index.ts` — Core constants (`PROJECT_NAME`, `PROTOCOL_VERSION`) and metadata types.
+  * `src/ws-protocol.ts` — Discriminated unions, Zod schemas, and type guards for all Client and Server WebSocket control messages.
+  * `src/ipc-channels.ts` — Typed Electron IPC channel constants, invoke contracts, and listener contracts.
+  * `src/models.ts` — Domain DTOs (`TranscriptUtterance`, `HintDTO`, `ProfileDTO`, `UserSettings`, `SessionDTO`).
+  * `src/index.ts` — Central re-export hub for all contracts and core metadata.
 * `apps/server/` — Node.js backend workspace (`@bash/server`).
   * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`, `zod`, `dotenv`, and `tsx`.
   * `tsconfig.json` — Project references configuration extending root base.
   * `.env.example` — Template defining all required environment variables for development.
   * `src/config/env.ts` — Strict, fail-fast environment loader validating runtime variables with Zod schemas.
-  * `src/index.ts` — Server entry point loading and logging validated environment status.
+  * `src/index.ts` — Server entry point validating environment and handling typed WebSocket message contracts.
 * `apps/desktop/` — Electron + React desktop workspace (`@bash/desktop`).
   * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`.
   * `tsconfig.json` — Project references configuration with DOM lib support.
-  * `src/index.ts` — Desktop entry point placeholder importing and executing `@bash/shared`.
+  * `src/index.ts` — Desktop entry point validating IPC channel registration and message generation.
 
 ### Documentation Artifacts
 
@@ -261,8 +270,10 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Doc 0.3` | Created `docs/phases.md` breaking the build into Phases 0–6 with minor Core, Third-Party Package, and UI milestones plus ending conditions. | Approved by user | 
 | `2026-11-22` | `Doc 0.4` | Created `docs/memory.md` to track project progress, MVP scope, invariants, and automated AI handoff state. | Approved by user | 
 | `2026-11-22` | `Doc 0.5` | Created `docs/rules.md` defining universal MUST/MUST NOT guardrails, mandatory alternative comparisons, behind-the-scenes package/mechanism deep-dives, and default `docs/memory.md` auto-updates. | Completed & logged | 
-| `2026-11-22` | `Phase 0 / 0.1` | Initialized pnpm monorepo workspace (`packages/shared`, `apps/desktop`, `apps/server`), shared TypeScript configuration with project references (`composite: true`), ESLint 9 + Prettier, and root convenience scripts (`typecheck`, `lint`, `format`). | Verified clean (`pnpm typecheck`, `pnpm run lint`, `pnpm format:check`, runtime imports passed with code 0) |
-| `2026-11-22` | `Phase 0 / 0.2` | Installed core utility packages (`zod`, `dotenv`, `tsx`), created `docker-compose.yml` for local MongoDB 7.0 container with health checks, and built fail-fast Zod-validated `env.ts` loader in `apps/server`. | Verified clean (missing env throws human-readable validation error; valid env boots cleanly with code 0) |
+| `2026-11-22` | `Phase 0 / 0.1` | Initialized pnpm monorepo workspace (`packages/shared`, `apps/desktop`, `apps/server`), shared TypeScript configuration with project references (`composite: true`), ESLint 9 + Prettier, and root convenience scripts (`typecheck`, `lint`, `format`). | Verified clean (`pnpm typecheck`, `pnpm run lint`, `pnpm format:check`, runtime imports passed with code 0) | 
+| `2026-11-22` | `Phase 0 / 0.2` | Installed core utility packages (`zod`, `dotenv`, `tsx`), created `docker-compose.yml` for local MongoDB 7.0 container with health checks, and built fail-fast Zod-validated `env.ts` loader in `apps/server`. | Verified clean (missing env throws human-readable validation error; valid env boots cleanly with code 0) | 
+| `2026-11-22` | `Phase 0 / 0.3` | Implemented shared protocol contracts in `packages/shared`: `ws-protocol.ts` (discriminated union message types + Zod schemas + type guards), `ipc-channels.ts` (Electron IPC contracts), and `models.ts` (domain DTOs). Verified cross-package consumption in `apps/server` and `apps/desktop`. | Verified clean (`tsc -b`, `eslint .`, `prettier`, and runtime message handler tests passed with code 0) | 
+| `2026-11-22` | `Phase 0 Gate` | Verified all Phase 0 Ending Conditions across monorepo typechecks, cross-package imports, and Zod fail-fast validation. | Phase 0 Complete |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
