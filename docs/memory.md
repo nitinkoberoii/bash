@@ -8,7 +8,7 @@
 
 **Current Phase:** Phase 0 — Monorepo Foundation & Shared Contracts
 
-**Next Action:** Start **Phase 0 — Milestone 0.2 (Third-Party Packages & Local Infrastructure)**
+**Next Action:** Start **Phase 0 — Milestone 0.3 (Shared Protocol Contracts: ws-protocol.ts, ipc-channels.ts, models.ts)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -102,11 +102,13 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * Completed all 5 pre-development governance and design documents (`bash_prd.md`, `architecture.md`, `phases.md`, `memory.md`, `rules.md`).
 
-  * **Completed Milestone 0.1 (Monorepo & Tooling Setup):** Initialized `pnpm` workspace with `packages/shared`, `apps/desktop`, and `apps/server`. Configured `tsconfig.base.json` and project references (`composite: true`), ESLint 9 + Prettier, root convenience scripts (`typecheck`, `format`, `lint`, `dev:server`). Verified cross-package imports and zero-error builds.
+  * **Completed Milestone 0.1 (Monorepo & Tooling Setup):** Initialized `pnpm` workspace with `packages/shared`, `apps/desktop`, and `apps/server`. Configured `tsconfig.base.json` and project references (`composite: true`), ESLint 9 + Prettier, root convenience scripts (`typecheck`, `format`, `lint`, `dev:server`).
+
+  * **Completed Milestone 0.2 (Third-Party Packages & Local Infrastructure):** Installed `zod`, `dotenv`, and `tsx`. Created `docker-compose.yml` for local MongoDB 7.0 development. Built strict, fail-fast `env.ts` configuration loader in `apps/server` with Zod validation. Verified human-readable error messages on missing or invalid environment variables.
 
 * **What We Need to Do Right Now:**
 
-  1. Begin **Phase 0 — Milestone 0.2: Third-Party Packages & Local Infrastructure** (install core utility packages `zod`, `dotenv`, `tsx`; create `docker-compose.yml` for local MongoDB development; build strict Zod-validated `env.ts` configuration loader in `apps/server`).
+  1. Begin **Phase 0 — Milestone 0.3: Shared Protocol Contracts (`packages/shared`)** (define discriminated unions for WebSocket client/server events in `ws-protocol.ts`, typed Electron IPC channel definitions in `ipc-channels.ts`, and core domain DTOs in `models.ts`).
 
 * **Active Blockers / Open Decisions:**
 
@@ -132,7 +134,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **0.1** — Monorepo & Tooling Setup (`packages/shared`, `apps/desktop`, `apps/server`)
 
-* `[ ]` **0.2** — Third-Party Packages & Local Infrastructure (`zod`, `docker-compose.yml` for MongoDB, `env.ts`)
+* `[x]` **0.2** — Third-Party Packages & Local Infrastructure (`zod`, `docker-compose.yml` for MongoDB, `env.ts`)
 
 * `[ ]` **0.3** — Shared Protocol Contracts (`ws-protocol.ts`, `ipc-channels.ts`, `models.ts`)
 
@@ -214,22 +216,25 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `package.json` — Monorepo root manifest declaring workspace dependencies, `typecheck`, `lint`, and formatting scripts.
 * `pnpm-workspace.yaml` — Defines workspace topology (`packages/*`, `apps/*`).
+* `docker-compose.yml` — Container definition for local MongoDB 7.0 development (`bash_mongodb`) with healthcheck and volume persistence.
 * `tsconfig.base.json` — Shared strict compiler options (`NodeNext`, `composite: true`, `strict: true`).
 * `tsconfig.json` — Root project reference coordinator linking all workspace projects for single-command `tsc -b`.
 * `eslint.config.mjs` — ESLint 9 Flat Config with TypeScript integration.
 * `.prettierrc.json` & `.prettierignore` — Deterministic formatting rules and exclusions.
-* `.gitignore` — Ignore patterns for `node_modules`, build artifacts, environment files, and system files.
+* `.gitignore` — Ignore patterns for `node_modules`, build artifacts, `.env` files, and system files.
 
 ### Packages & Applications
 
 * `packages/shared/` — Common TypeScript contracts library (`@bash/shared`).
-  * `package.json` — Package configuration exporting ES modules and `.d.ts` types.
+  * `package.json` — Package configuration exporting ES modules and `.d.ts` types (now includes `zod`).
   * `tsconfig.json` — Project references composite TypeScript configuration (`composite: true`).
   * `src/index.ts` — Core constants (`PROJECT_NAME`, `PROTOCOL_VERSION`) and metadata types.
 * `apps/server/` — Node.js backend workspace (`@bash/server`).
-  * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`.
+  * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`, `zod`, `dotenv`, and `tsx`.
   * `tsconfig.json` — Project references configuration extending root base.
-  * `src/index.ts` — Server entry point placeholder importing and executing `@bash/shared`.
+  * `.env.example` — Template defining all required environment variables for development.
+  * `src/config/env.ts` — Strict, fail-fast environment loader validating runtime variables with Zod schemas.
+  * `src/index.ts` — Server entry point loading and logging validated environment status.
 * `apps/desktop/` — Electron + React desktop workspace (`@bash/desktop`).
   * `package.json` — Workspace manifest consuming `@bash/shared: workspace:*`.
   * `tsconfig.json` — Project references configuration with DOM lib support.
@@ -257,8 +262,10 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Doc 0.4` | Created `docs/memory.md` to track project progress, MVP scope, invariants, and automated AI handoff state. | Approved by user | 
 | `2026-11-22` | `Doc 0.5` | Created `docs/rules.md` defining universal MUST/MUST NOT guardrails, mandatory alternative comparisons, behind-the-scenes package/mechanism deep-dives, and default `docs/memory.md` auto-updates. | Completed & logged | 
 | `2026-11-22` | `Phase 0 / 0.1` | Initialized pnpm monorepo workspace (`packages/shared`, `apps/desktop`, `apps/server`), shared TypeScript configuration with project references (`composite: true`), ESLint 9 + Prettier, and root convenience scripts (`typecheck`, `lint`, `format`). | Verified clean (`pnpm typecheck`, `pnpm run lint`, `pnpm format:check`, runtime imports passed with code 0) |
+| `2026-11-22` | `Phase 0 / 0.2` | Installed core utility packages (`zod`, `dotenv`, `tsx`), created `docker-compose.yml` for local MongoDB 7.0 container with health checks, and built fail-fast Zod-validated `env.ts` loader in `apps/server`. | Verified clean (missing env throws human-readable validation error; valid env boots cleanly with code 0) |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
 * **Windows & pnpm Installations:** Per sandbox policy, pnpm commands that alter packages (`pnpm install`, `pnpm add`) should be run with elevated bypass permissions on Windows to handle hard-link creation cleanly, while verification scripts (`typecheck`, `lint`, `format`) run securely within the sandbox.
+* **pnpm v11 Build Script Approvals:** Modern pnpm enforces security checks on packages that execute build scripts (`esbuild` post-install). Running `pnpm approve-builds --all` registers permanent approval for trusted dependencies.
 * **Prettier Markdown Safety:** Excluded `docs/` and `*.md` from formatting checks in `.prettierignore` to protect LaTeX math formulas (`KaTeX`) and markdown tables from unintended line-wrapping mutations.
