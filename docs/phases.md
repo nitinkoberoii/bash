@@ -37,10 +37,10 @@
 
 ### Phase 0 Ending Conditions (Definition of Done)
 
-* [ ] `npm run typecheck` (or `pnpm typecheck`) succeeds cleanly across all three workspaces with zero errors.
-* [ ] Importing a type from `@bash/shared` works inside both `apps/desktop` and `apps/server`.
-* [ ] `docker compose up -d` starts MongoDB locally and a health check script connects successfully.
-* [ ] Starting the server without a required `.env` variable throws a clear, human-readable `zod` validation error.
+* [ x ] `npm run typecheck` (or `pnpm typecheck`) succeeds cleanly across all three workspaces with zero errors.
+* [ x ] Importing a type from `@bash/shared` works inside both `apps/desktop` and `apps/server`.
+* [ x ] `docker compose up -d` starts MongoDB locally and a health check script connects successfully.
+* [ x ] Starting the server without a required `.env` variable throws a clear, human-readable `zod` validation error.
 
 > **Learning Checkpoint:** Explain how TypeScript discriminated unions (using a `type` field on WebSocket messages) prevent runtime parsing bugs between client and server.
 
