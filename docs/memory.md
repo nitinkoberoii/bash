@@ -6,9 +6,9 @@
 
 **Last Updated:** 2026-11-22
 
-**Current Phase:** Phase 1 — Milestone 1.2 Complete (Ready for Milestone 1.3)
+**Current Phase:** Phase 1 — Milestone 1.3 Complete (Ready for Milestone 1.4)
 
-**Next Action:** Advance to **Phase 1 — Milestone 1.3 (Secure Preload Bridge, Global Hotkeys & System Tray: Ctrl+Shift+H/I/Space/X, Tray Menu)**
+**Next Action:** Advance to **Phase 1 — Milestone 1.4 (UI Milestone: Minimalist Overlay HUD — OverlayHUD.tsx, StatusBar.tsx with mocked hints)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -114,15 +114,14 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **Completed Milestone 1.2 (Stealth Overlay BrowserWindow):** Transformed `BrowserWindow` into a frameless, transparent overlay (`frame: false`, `transparent: true`, `hasShadow: false`, `focusable: false`, `skipTaskbar: true`, `resizable: false`, `alwaysOnTop: true, 'screen-saver'`) centered horizontally near the top edge of the primary display. Activated OS-level screen-capture exclusion via `setContentProtection(true)` (`WDA_EXCLUDEFROMCAPTURE`), click-through mouse passthrough via `setIgnoreMouseEvents(true, { forward: true })`, and implemented the IPC handler for `IPC_CHANNELS.SET_CLICK_THROUGH`. Updated `index.html`, `index.css`, and `App.tsx` to render transparent glass with a low-glare floating card.
 
+  * **Completed Milestone 1.3 (Secure Preload Bridge, Global Hotkeys & System Tray):** Built dedicated Windows System Tray controller in `electron/tray.ts` generating a 16x16 RGBA in-memory icon with Toggle Visibility, Toggle Interactive, and Quit menus. Registered OS-wide global shortcuts via `globalShortcut` in `electron/main.ts` (`Ctrl+Shift+H` for hide/show, `Ctrl+Shift+I` for click-through toggle, `Ctrl+Shift+Space` for manual trigger, and `Ctrl+Shift+X` for context flush). Exposed typed subscriber APIs on `window.bashAPI` via `preload.ts` (`contextBridge`) with automatic unlistener cleanup. Wired reactive state in `App.tsx` to dynamically flip between `LOCKED (Click-Through)` and `INTERACTIVE (Draggable)` modes, enable window dragging when unlocked (`-webkit-app-region: drag`), and display transient toast notifications on trigger/clear hotkeys. Handled clean teardown (`unregisterAll`, `destroySystemTray`) on `will-quit`.
+
 * **What We Need to Do Right Now:**
 
-  * Advance to **Phase 1 — Milestone 1.3: Secure Preload Bridge, Global Hotkeys & System Tray**:
-    * Register OS-wide shortcuts (`globalShortcut`):
-      * `Ctrl+Shift+H`: Hide/show overlay.
-      * `Ctrl+Shift+I`: Toggle click-through vs. interactive drag/resize mode.
-      * `Ctrl+Shift+Space`: Emit manual hint trigger event to Renderer.
-      * `Ctrl+Shift+X`: Emit clear-context event.
-    * Add a discreet Windows System Tray icon with a Quit / Toggle Visibility menu.
+  * Advance to **Phase 1 — Milestone 1.4: UI Milestone: Minimalist Overlay HUD (Mocked State)**:
+    * Design and build `OverlayHUD.tsx` and `StatusBar.tsx` with Tailwind CSS using low-glare dark neutral tones.
+    * Add visual badge indicating `LOCKED (Click-Through)` vs. `INTERACTIVE (Draggable)` mode.
+    * Render mocked bullet-point hints and verify readability when positioned near the top-center of your monitor over VS Code and a browser.
 
 * **Active Blockers / Open Decisions:**
 
@@ -160,7 +159,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **1.2** — Stealth Overlay `BrowserWindow` (`setContentProtection(true)`, `skipTaskbar`, `focusable: false`, click-through)
 
-* `[ ]` **1.3** — Secure Preload Bridge (`contextBridge`), Global Hotkeys & System Tray
+* `[x]` **1.3** — Secure Preload Bridge (`contextBridge`), Global Hotkeys & System Tray
 
 * `[ ]` **1.4** — **UI Milestone:** Minimalist Overlay HUD (`OverlayHUD.tsx`, `StatusBar.tsx` with mocked hints)
 
@@ -256,10 +255,11 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
   * `package.json` — Desktop workspace manifest configuring Vite, React 19, Tailwind CSS, and `dist-electron/main.js` entry point.
   * `vite.config.ts` — Vite build and dev configuration utilizing `@vitejs/plugin-react` and `vite-plugin-electron/simple`.
   * `tailwind.config.js` & `postcss.config.js` — Utility CSS configuration defining low-glare dark HUD color tokens and PostCSS plugins.
-  * `electron/main.ts` — Main process entry point enforcing `app.requestSingleInstanceLock()`, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, and `IPC_CHANNELS.SET_CLICK_THROUGH` handler.
-  * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` with `setClickThrough` via `contextBridge.exposeInMainWorld`.
+  * `electron/tray.ts` — Dedicated Windows System Tray controller with in-memory 16x16 icon, toggle visibility/interactive menus, and quit action.
+  * `electron/main.ts` — Main process entry point enforcing single-instance lock, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, global shortcuts (`Ctrl+Shift+H/I/Space/X`), and system tray lifecycle.
+  * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` with `onInteractiveToggle`, `onManualTrigger`, `onClearContext`, and `setClickThrough` via `contextBridge`.
   * `src/main.tsx` — React 19 entry point mounting the root application into `#root`.
-  * `src/App.tsx` — Stealth floating HUD overlay component with transparent background, status pills (`LOCKED`, `STEALTH`), and scannable technical hints.
+  * `src/App.tsx` — Stealth floating HUD overlay component with transparent background, dynamic status badge (`LOCKED` vs. `INTERACTIVE`), hotkey toast banner, and scannable technical hints.
   * `src/index.css` & `index.html` — Transparent background styling and user-select suppression for seamless glass rendering.
   * `src/types/electron.d.ts` — TypeScript ambient declaration attaching typed `bashAPI` to `window`.
   * `tsconfig.json` — Composite TypeScript project references configuration with DOM and React JSX support.
@@ -291,6 +291,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Phase 0 Gate` | Verified all Phase 0 Ending Conditions across monorepo typechecks, cross-package imports, and Zod fail-fast validation. | Phase 0 Complete |
 | `2026-11-22` | `Phase 1 / 1.1` | Scaffolded `apps/desktop` with Electron, Vite, React 19, and Tailwind CSS. Implemented single-instance lock (`app.requestSingleInstanceLock()`), Preload contextBridge, and React overlay component. | Verified clean: automated single-instance lock test (duplicate instance rejected, primary focused, code 0), build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 | `2026-11-22` | `Phase 1 / 1.2` | Transformed `BrowserWindow` into frameless, transparent overlay with `setContentProtection(true)` (`WDA_EXCLUDEFROMCAPTURE`), click-through passthrough (`setIgnoreMouseEvents`), `focusable: false`, and `skipTaskbar: true`. Updated `App.tsx` and CSS for glass rendering with floating HUD card. | Verified clean: automated Electron launch test passed with `alwaysOnTop = true`, stealth overlay verified, build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
+| `2026-11-22` | `Phase 1 / 1.3` | Built Windows System Tray controller (`electron/tray.ts`), registered global shortcuts (`Ctrl+Shift+H/I/Space/X`), exposed typed listener bridge (`preload.ts`), and wired interactive drag vs click-through mode in `App.tsx` with hotkey toast feedback. | Verified clean: automated launch test verified shortcut registration and tray creation, build passed, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
@@ -301,3 +302,4 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 * **Electron CommonJS vs ESM Main Entry:** Inside Node.js, `electron`'s npm stub exports an executable path rather than native framework APIs. Compiling the Electron Main process as CommonJS (`formats: ["cjs"]` via `vite-plugin-electron/simple`) allows Electron's internal `Module._load` hook to provide native `app`, `BrowserWindow`, and `shell` APIs seamlessly.
 * **Windows GUI Headless Execution:** Windows GUI applications require an interactive desktop window station (`WinSta0\Default`) to create HWNDs. Running automated Electron launch tests requires running outside the restricted sandbox (`BypassSandbox: true`) with `--no-sandbox` and `--disable-gpu` flags.
 * **Chromium Single-Instance Lockfile Isolation in Automated Tests:** When running automated Electron tests in CI or sandbox commands, passing `--user-data-dir` avoids permissions conflicts on `%APPDATA%` and guarantees clean test isolation.
+* **Windows Notification Area (Tray) Headless Handling:** Windows `Shell_NotifyIconW` gracefully warns if running in non-interactive / headless CI environments; wrapping `tray.ts` with error guards prevents headless test runner crashes while fully activating on user desktop sessions.

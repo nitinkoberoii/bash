@@ -1,6 +1,7 @@
-import { app, BrowserWindow, shell, screen, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, screen, ipcMain, globalShortcut } from 'electron';
 import path from 'node:path';
 import { IPC_CHANNELS } from '@bash/shared';
+import { createSystemTray, destroySystemTray } from './tray';
 
 // Enforce Single-Instance Lock
 const gotTheLock = app.requestSingleInstanceLock();
@@ -10,17 +11,65 @@ if (!gotTheLock) {
   app.quit();
 } else {
   let mainWindow: BrowserWindow | null = null;
+  let isClickThrough = true;
+
+  const toggleVisibility = (): void => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+    } else {
+      mainWindow.show();
+    }
+  };
+
+  const toggleInteractiveMode = (): void => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    isClickThrough = !isClickThrough;
+    mainWindow.setIgnoreMouseEvents(isClickThrough, { forward: true });
+    // Broadcast interactive state to Renderer (isInteractive = !isClickThrough)
+    mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TOGGLE_INTERACTIVE, !isClickThrough);
+    console.log(`[Main] Interactive mode toggled. Click-through: ${isClickThrough}`);
+  };
+
+  const registerGlobalHotkeys = (): void => {
+    // Ctrl+Shift+H: Toggle Hide/Show Overlay
+    globalShortcut.register('CommandOrControl+Shift+H', () => {
+      console.log('[Main] Hotkey triggered: Ctrl+Shift+H (Toggle Visibility)');
+      toggleVisibility();
+    });
+
+    // Ctrl+Shift+I: Toggle Click-Through vs Interactive Drag Mode
+    globalShortcut.register('CommandOrControl+Shift+I', () => {
+      console.log('[Main] Hotkey triggered: Ctrl+Shift+I (Toggle Interactive Mode)');
+      toggleInteractiveMode();
+    });
+
+    // Ctrl+Shift+Space: Manual Hint Trigger
+    globalShortcut.register('CommandOrControl+Shift+Space', () => {
+      console.log('[Main] Hotkey triggered: Ctrl+Shift+Space (Manual Hint Trigger)');
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_TRIGGER, 'manual-trigger');
+      }
+    });
+
+    // Ctrl+Shift+X: Clear Conversation Context
+    globalShortcut.register('CommandOrControl+Shift+X', () => {
+      console.log('[Main] Hotkey triggered: Ctrl+Shift+X (Clear Context)');
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(IPC_CHANNELS.HOTKEY_CLEAR_CONTEXT, 'clear-context');
+      }
+    });
+  };
 
   const createWindow = async (): Promise<void> => {
     const preloadPath = path.join(__dirname, 'preload.js');
 
-    // Calculate initial position: top-center near the webcam
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth } = primaryDisplay.workAreaSize;
     const overlayWidth = 480;
     const overlayHeight = 280;
     const x = Math.round((screenWidth - overlayWidth) / 2);
-    const y = 40; // 40px from top of monitor
+    const y = 40;
 
     mainWindow = new BrowserWindow({
       width: overlayWidth,
@@ -45,7 +94,6 @@ if (!gotTheLock) {
       },
     });
 
-    // Native OS Window display affinity & stealth layers
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.setContentProtection(true);
     mainWindow.setIgnoreMouseEvents(true, { forward: true });
@@ -67,11 +115,24 @@ if (!gotTheLock) {
       await mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
 
-    // Automated self-test hook
+    // Register OS-wide global shortcuts
+    registerGlobalHotkeys();
+
+    // Create Windows System Tray
+    createSystemTray(mainWindow, {
+      onToggleVisibility: toggleVisibility,
+      onToggleInteractive: toggleInteractiveMode,
+    });
+
+    // Automated CI/dev self-test teardown
     if (process.env.ELECTRON_TEST_QUIT === 'true') {
       console.log('[Main] Test mode: single-instance lock acquired successfully!');
       console.log('[Main] Test mode: alwaysOnTop =', mainWindow.isAlwaysOnTop());
-      console.log('[Main] Test mode: stealth overlay configured successfully!');
+      console.log(
+        '[Main] Test mode: hotkeys registered =',
+        globalShortcut.isRegistered('CommandOrControl+Shift+H')
+      );
+      console.log('[Main] Test mode: stealth overlay and tray configured successfully!');
       setTimeout(() => {
         console.log('[Main] Test mode: shutting down primary instance cleanly.');
         app.quit();
@@ -79,24 +140,35 @@ if (!gotTheLock) {
     }
   };
 
-  // IPC: Toggle Click-Through mode
+  // IPC Handlers
   ipcMain.handle(IPC_CHANNELS.SET_CLICK_THROUGH, (_event, ignore: boolean): boolean => {
     if (mainWindow && !mainWindow.isDestroyed()) {
+      isClickThrough = ignore;
       mainWindow.setIgnoreMouseEvents(ignore, { forward: true });
       return true;
     }
     return false;
   });
 
+  ipcMain.handle(IPC_CHANNELS.APP_QUIT, (): void => {
+    app.quit();
+  });
+
   app.on('second-instance', () => {
     console.log('[Main] Second instance detected via IPC. Bringing overlay to focus.');
     if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
+      if (!mainWindow.isVisible()) mainWindow.show();
       mainWindow.focus();
     }
   });
 
   app.whenReady().then(createWindow);
+
+  app.on('will-quit', () => {
+    // Unregister all shortcuts and destroy tray
+    globalShortcut.unregisterAll();
+    destroySystemTray();
+  });
 
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
