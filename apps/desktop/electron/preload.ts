@@ -1,4 +1,4 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { PROJECT_NAME, APP_METADATA, IPC_CHANNELS } from '@bash/shared';
 
 const bashAPI = {
@@ -6,6 +6,8 @@ const bashAPI = {
   version: APP_METADATA.version,
   platform: APP_METADATA.targetPlatform,
   ipcChannels: IPC_CHANNELS,
+  setClickThrough: (ignore: boolean): Promise<boolean> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SET_CLICK_THROUGH, ignore),
   ping: (): string => 'pong',
 };
 

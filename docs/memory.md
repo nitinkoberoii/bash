@@ -6,9 +6,9 @@
 
 **Last Updated:** 2026-11-22
 
-**Current Phase:** Phase 1 — Milestone 1.1 Complete (Ready for Milestone 1.2)
+**Current Phase:** Phase 1 — Milestone 1.2 Complete (Ready for Milestone 1.3)
 
-**Next Action:** Advance to **Phase 1 — Milestone 1.2 (Stealth Overlay BrowserWindow: setContentProtection(true), skipTaskbar, focusable: false, click-through)**
+**Next Action:** Advance to **Phase 1 — Milestone 1.3 (Secure Preload Bridge, Global Hotkeys & System Tray: Ctrl+Shift+H/I/Space/X, Tray Menu)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -112,12 +112,17 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **Completed Milestone 1.1 (Third-Party Packages & Desktop Boilerplate):** Scaffolded `apps/desktop` with `electron`, `vite`, `react`, `react-dom`, `tailwindcss`, `vite-plugin-electron/simple`, `postcss`, and `autoprefixer`. Configured Electron Main process with single-instance lock (`app.requestSingleInstanceLock()`), Preload script with typed `contextBridge`, React 19 root with Tailwind CSS styling, and Vite dev/build workflows. Verified duplicate instance rejection, second-instance IPC focus signaling, clean build artifacts, and passing monorepo-wide typecheck/lint.
 
+  * **Completed Milestone 1.2 (Stealth Overlay BrowserWindow):** Transformed `BrowserWindow` into a frameless, transparent overlay (`frame: false`, `transparent: true`, `hasShadow: false`, `focusable: false`, `skipTaskbar: true`, `resizable: false`, `alwaysOnTop: true, 'screen-saver'`) centered horizontally near the top edge of the primary display. Activated OS-level screen-capture exclusion via `setContentProtection(true)` (`WDA_EXCLUDEFROMCAPTURE`), click-through mouse passthrough via `setIgnoreMouseEvents(true, { forward: true })`, and implemented the IPC handler for `IPC_CHANNELS.SET_CLICK_THROUGH`. Updated `index.html`, `index.css`, and `App.tsx` to render transparent glass with a low-glare floating card.
+
 * **What We Need to Do Right Now:**
 
-  * Advance to **Phase 1 — Milestone 1.2: Stealth Overlay BrowserWindow (Main Process)**:
-    * Configure the frameless, transparent `BrowserWindow` with `alwaysOnTop: true`, `skipTaskbar: true`, `focusable: false`, and `hasShadow: false`.
-    * Enable OS-level screen-capture exclusion via `overlayWindow.setContentProtection(true)`.
-    * Implement click-through defaults using `setIgnoreMouseEvents(true, { forward: true })`.
+  * Advance to **Phase 1 — Milestone 1.3: Secure Preload Bridge, Global Hotkeys & System Tray**:
+    * Register OS-wide shortcuts (`globalShortcut`):
+      * `Ctrl+Shift+H`: Hide/show overlay.
+      * `Ctrl+Shift+I`: Toggle click-through vs. interactive drag/resize mode.
+      * `Ctrl+Shift+Space`: Emit manual hint trigger event to Renderer.
+      * `Ctrl+Shift+X`: Emit clear-context event.
+    * Add a discreet Windows System Tray icon with a Quit / Toggle Visibility menu.
 
 * **Active Blockers / Open Decisions:**
 
@@ -153,7 +158,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **1.1** — Third-Party Packages & Desktop Boilerplate (`electron`, `vite`, `react`, `tailwindcss`)
 
-* `[ ]` **1.2** — Stealth Overlay `BrowserWindow` (`setContentProtection(true)`, `skipTaskbar`, `focusable: false`, click-through)
+* `[x]` **1.2** — Stealth Overlay `BrowserWindow` (`setContentProtection(true)`, `skipTaskbar`, `focusable: false`, click-through)
 
 * `[ ]` **1.3** — Secure Preload Bridge (`contextBridge`), Global Hotkeys & System Tray
 
@@ -251,11 +256,11 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
   * `package.json` — Desktop workspace manifest configuring Vite, React 19, Tailwind CSS, and `dist-electron/main.js` entry point.
   * `vite.config.ts` — Vite build and dev configuration utilizing `@vitejs/plugin-react` and `vite-plugin-electron/simple`.
   * `tailwind.config.js` & `postcss.config.js` — Utility CSS configuration defining low-glare dark HUD color tokens and PostCSS plugins.
-  * `electron/main.ts` — Main process entry point enforcing `app.requestSingleInstanceLock()`, window lifecycle, and IPC focus restoration.
-  * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` via `contextBridge.exposeInMainWorld`.
+  * `electron/main.ts` — Main process entry point enforcing `app.requestSingleInstanceLock()`, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, and `IPC_CHANNELS.SET_CLICK_THROUGH` handler.
+  * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` with `setClickThrough` via `contextBridge.exposeInMainWorld`.
   * `src/main.tsx` — React 19 entry point mounting the root application into `#root`.
-  * `src/App.tsx` — Test overlay HUD component demonstrating HMR state, bridge status, and dark slate styling.
-  * `src/index.css` — Global CSS injecting Tailwind utilities and disabling text selection.
+  * `src/App.tsx` — Stealth floating HUD overlay component with transparent background, status pills (`LOCKED`, `STEALTH`), and scannable technical hints.
+  * `src/index.css` & `index.html` — Transparent background styling and user-select suppression for seamless glass rendering.
   * `src/types/electron.d.ts` — TypeScript ambient declaration attaching typed `bashAPI` to `window`.
   * `tsconfig.json` — Composite TypeScript project references configuration with DOM and React JSX support.
 
@@ -285,6 +290,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Phase 0 / 0.3` | Implemented shared protocol contracts in `packages/shared`: `ws-protocol.ts` (discriminated union message types + Zod schemas + type guards), `ipc-channels.ts` (Electron IPC contracts), and `models.ts` (domain DTOs). Verified cross-package consumption in `apps/server` and `apps/desktop`. | Verified clean (`tsc -b`, `eslint .`, `prettier`, and runtime message handler tests passed with code 0) | 
 | `2026-11-22` | `Phase 0 Gate` | Verified all Phase 0 Ending Conditions across monorepo typechecks, cross-package imports, and Zod fail-fast validation. | Phase 0 Complete |
 | `2026-11-22` | `Phase 1 / 1.1` | Scaffolded `apps/desktop` with Electron, Vite, React 19, and Tailwind CSS. Implemented single-instance lock (`app.requestSingleInstanceLock()`), Preload contextBridge, and React overlay component. | Verified clean: automated single-instance lock test (duplicate instance rejected, primary focused, code 0), build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
+| `2026-11-22` | `Phase 1 / 1.2` | Transformed `BrowserWindow` into frameless, transparent overlay with `setContentProtection(true)` (`WDA_EXCLUDEFROMCAPTURE`), click-through passthrough (`setIgnoreMouseEvents`), `focusable: false`, and `skipTaskbar: true`. Updated `App.tsx` and CSS for glass rendering with floating HUD card. | Verified clean: automated Electron launch test passed with `alwaysOnTop = true`, stealth overlay verified, build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
@@ -294,3 +300,4 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 * **`ELECTRON_RUN_AS_NODE` Gotcha:** When executing Electron test commands from IDE-spawned terminal sessions, `ELECTRON_RUN_AS_NODE=1` is inherited from the IDE's environment, causing `electron.exe` to strip all Electron APIs and run as pure Node.js. Child test processes must delete `ELECTRON_RUN_AS_NODE` from `process.env` to run in native Electron app mode.
 * **Electron CommonJS vs ESM Main Entry:** Inside Node.js, `electron`'s npm stub exports an executable path rather than native framework APIs. Compiling the Electron Main process as CommonJS (`formats: ["cjs"]` via `vite-plugin-electron/simple`) allows Electron's internal `Module._load` hook to provide native `app`, `BrowserWindow`, and `shell` APIs seamlessly.
 * **Windows GUI Headless Execution:** Windows GUI applications require an interactive desktop window station (`WinSta0\Default`) to create HWNDs. Running automated Electron launch tests requires running outside the restricted sandbox (`BypassSandbox: true`) with `--no-sandbox` and `--disable-gpu` flags.
+* **Chromium Single-Instance Lockfile Isolation in Automated Tests:** When running automated Electron tests in CI or sandbox commands, passing `--user-data-dir` avoids permissions conflicts on `%APPDATA%` and guarantees clean test isolation.
