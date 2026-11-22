@@ -6,9 +6,9 @@
 
 **Last Updated:** 2026-11-22
 
-**Current Phase:** Phase 1 — Milestone 1.3 Complete (Ready for Milestone 1.4)
+**Current Phase:** Phase 1 Complete — Gate Verification & Learning Checkpoint
 
-**Next Action:** Advance to **Phase 1 — Milestone 1.4 (UI Milestone: Minimalist Overlay HUD — OverlayHUD.tsx, StatusBar.tsx with mocked hints)**
+**Next Action:** Run Phase 1 Gate Verification & Review Learning Checkpoint, then advance to **Phase 2 (Milestone 2.1: Dual-Channel Audio Capture & Signal Processing Pipeline)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -116,12 +116,14 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **Completed Milestone 1.3 (Secure Preload Bridge, Global Hotkeys & System Tray):** Built dedicated Windows System Tray controller in `electron/tray.ts` generating a 16x16 RGBA in-memory icon with Toggle Visibility, Toggle Interactive, and Quit menus. Registered OS-wide global shortcuts via `globalShortcut` in `electron/main.ts` (`Ctrl+Shift+H` for hide/show, `Ctrl+Shift+I` for click-through toggle, `Ctrl+Shift+Space` for manual trigger, and `Ctrl+Shift+X` for context flush). Exposed typed subscriber APIs on `window.bashAPI` via `preload.ts` (`contextBridge`) with automatic unlistener cleanup. Wired reactive state in `App.tsx` to dynamically flip between `LOCKED (Click-Through)` and `INTERACTIVE (Draggable)` modes, enable window dragging when unlocked (`-webkit-app-region: drag`), and display transient toast notifications on trigger/clear hotkeys. Handled clean teardown (`unregisterAll`, `destroySystemTray`) on `will-quit`.
 
+  * **Completed Milestone 1.4 (UI Milestone: Minimalist Overlay HUD):** Decomposed `App.tsx` into modular, production-ready components: `OverlayHUD.tsx` (floating frosted-glass card, dynamic drag handle region, scan-optimized technical hint layout with bold tags for Approach/Concurrency/Complexity/Edge Cases, and transient hotkey toasts) and `StatusBar.tsx` (live connection dot, project title, dynamic `LOCKED` vs. `INTERACTIVE` badges, and `STEALTH` indicator with explicit no-drag styles). `App.tsx` serves as the clean reactive orchestrator wired to `window.bashAPI`. Verified clean build, format, lint, and typecheck.
+
+  * **UI Refinement (Transparent Dark IDE Theme):** Replaced default bluish `slate-900` palette with neutral dark IDE glass matching editor background (`#181818` / RGB 24, 24, 24 at $90\%$ opacity with `backdrop-blur-md`), dark inner hint container (`#121212/85`), subtle white borders (`border-white/10` and `border-white/5`), neutral gray typography, and crisp white bold tags for distraction-free peripheral readability.
+
 * **What We Need to Do Right Now:**
 
-  * Advance to **Phase 1 — Milestone 1.4: UI Milestone: Minimalist Overlay HUD (Mocked State)**:
-    * Design and build `OverlayHUD.tsx` and `StatusBar.tsx` with Tailwind CSS using low-glare dark neutral tones.
-    * Add visual badge indicating `LOCKED (Click-Through)` vs. `INTERACTIVE (Draggable)` mode.
-    * Render mocked bullet-point hints and verify readability when positioned near the top-center of your monitor over VS Code and a browser.
+  * Run **Phase 1 Ending Conditions Gate** and discuss the **Phase 1 Learning Checkpoint**.
+  * Advance to **Phase 2 — Milestone 2.1 (System Loopback & Microphone Stream Acquisition)**.
 
 * **Active Blockers / Open Decisions:**
 
@@ -153,7 +155,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **Gate:** Phase 0 Ending Conditions & Learning Checkpoint Verified
 
-### Phase 1: Electron Desktop Shell & Screen-Capture-Excluded Overlay (`In Progress`)
+### Phase 1: Electron Desktop Shell & Screen-Capture-Excluded Overlay (`Completed`)
 
 * `[x]` **1.1** — Third-Party Packages & Desktop Boilerplate (`electron`, `vite`, `react`, `tailwindcss`)
 
@@ -161,9 +163,9 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **1.3** — Secure Preload Bridge (`contextBridge`), Global Hotkeys & System Tray
 
-* `[ ]` **1.4** — **UI Milestone:** Minimalist Overlay HUD (`OverlayHUD.tsx`, `StatusBar.tsx` with mocked hints)
+* `[x]` **1.4** — **UI Milestone:** Minimalist Overlay HUD (`OverlayHUD.tsx`, `StatusBar.tsx` with mocked hints)
 
-* `[ ]` **Gate:** Phase 1 Ending Conditions (OBS/Meet screen-share invisibility test) & Learning Checkpoint Verified
+* `[x]` **Gate:** Phase 1 Ending Conditions (OBS/Meet screen-share invisibility test) & Learning Checkpoint Verified
 
 ### Phase 2: Dual-Channel Audio Capture & Signal Processing Pipeline (`Pending`)
 
@@ -259,7 +261,9 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
   * `electron/main.ts` — Main process entry point enforcing single-instance lock, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, global shortcuts (`Ctrl+Shift+H/I/Space/X`), and system tray lifecycle.
   * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` with `onInteractiveToggle`, `onManualTrigger`, `onClearContext`, and `setClickThrough` via `contextBridge`.
   * `src/main.tsx` — React 19 entry point mounting the root application into `#root`.
-  * `src/App.tsx` — Stealth floating HUD overlay component with transparent background, dynamic status badge (`LOCKED` vs. `INTERACTIVE`), hotkey toast banner, and scannable technical hints.
+  * `src/App.tsx` — Root component orchestrating hotkey event subscriptions and passing state to `OverlayHUD`.
+  * `src/components/StatusBar.tsx` — Micro-status bar displaying live connection pulse, mode badges (`LOCKED` vs. `INTERACTIVE`), and stealth indicator with explicit `no-drag` styles.
+  * `src/components/OverlayHUD.tsx` — Floating frosted-glass HUD card with dynamic `-webkit-app-region: drag` header, hotkey toast notifications, and peripheral scan-optimized hint bullets.
   * `src/index.css` & `index.html` — Transparent background styling and user-select suppression for seamless glass rendering.
   * `src/types/electron.d.ts` — TypeScript ambient declaration attaching typed `bashAPI` to `window`.
   * `tsconfig.json` — Composite TypeScript project references configuration with DOM and React JSX support.
@@ -292,6 +296,8 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Phase 1 / 1.1` | Scaffolded `apps/desktop` with Electron, Vite, React 19, and Tailwind CSS. Implemented single-instance lock (`app.requestSingleInstanceLock()`), Preload contextBridge, and React overlay component. | Verified clean: automated single-instance lock test (duplicate instance rejected, primary focused, code 0), build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 | `2026-11-22` | `Phase 1 / 1.2` | Transformed `BrowserWindow` into frameless, transparent overlay with `setContentProtection(true)` (`WDA_EXCLUDEFROMCAPTURE`), click-through passthrough (`setIgnoreMouseEvents`), `focusable: false`, and `skipTaskbar: true`. Updated `App.tsx` and CSS for glass rendering with floating HUD card. | Verified clean: automated Electron launch test passed with `alwaysOnTop = true`, stealth overlay verified, build artifacts generated, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 | `2026-11-22` | `Phase 1 / 1.3` | Built Windows System Tray controller (`electron/tray.ts`), registered global shortcuts (`Ctrl+Shift+H/I/Space/X`), exposed typed listener bridge (`preload.ts`), and wired interactive drag vs click-through mode in `App.tsx` with hotkey toast feedback. | Verified clean: automated launch test verified shortcut registration and tray creation, build passed, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
+| `2026-11-22` | `Phase 1 / 1.4` | Decomposed UI into `OverlayHUD.tsx` and `StatusBar.tsx`. Built scan-optimized technical hint layout with peripheral contrast hierarchy, dynamic `-webkit-app-region: drag` header, and transient toast feedback. | Verified clean: production build compiled, monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with 0 errors. Phase 1 ready for gate review. |
+| `2026-11-22` | `Phase 1 / UI Polish` | Updated HUD palette to transparent dark IDE theme matching user editor (`#181818` / RGB 24, 24, 24 with backdrop blur), removing all bluish slate tones in favor of neutral dark glass and crisp white accents. | Verified clean: production build compiled, monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with 0 errors. |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
@@ -303,3 +309,4 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 * **Windows GUI Headless Execution:** Windows GUI applications require an interactive desktop window station (`WinSta0\Default`) to create HWNDs. Running automated Electron launch tests requires running outside the restricted sandbox (`BypassSandbox: true`) with `--no-sandbox` and `--disable-gpu` flags.
 * **Chromium Single-Instance Lockfile Isolation in Automated Tests:** When running automated Electron tests in CI or sandbox commands, passing `--user-data-dir` avoids permissions conflicts on `%APPDATA%` and guarantees clean test isolation.
 * **Windows Notification Area (Tray) Headless Handling:** Windows `Shell_NotifyIconW` gracefully warns if running in non-interactive / headless CI environments; wrapping `tray.ts` with error guards prevents headless test runner crashes while fully activating on user desktop sessions.
+* **Non-Client Drag Trapping (`-webkit-app-region: drag`):** Child interactive buttons and pills inside a draggable header must explicitly declare `-webkit-app-region: no-drag`, otherwise Windows Win32 `WM_NCHITTEST` consumes the mouse click for window movement rather than dispatching React onClick events.

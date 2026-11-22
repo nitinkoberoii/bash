@@ -4,12 +4,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        ide: {
+          bg: '#181818',
+          card: 'rgba(24, 24, 24, 0.88)',
+          inner: 'rgba(18, 18, 18, 0.75)',
+          border: 'rgba(255, 255, 255, 0.08)',
+          text: '#ededed',
+          muted: '#9a9a9a',
+          dim: '#555555',
+        },
         hud: {
-          bg: 'rgba(15, 23, 42, 0.85)',
-          border: 'rgba(51, 65, 85, 0.6)',
-          text: '#f8fafc',
-          muted: '#94a3b8',
-          accent: '#38bdf8',
+          bg: 'rgba(24, 24, 24, 0.88)',
+          border: 'rgba(255, 255, 255, 0.08)',
+          text: '#ededed',
+          muted: '#9a9a9a',
+          accent: '#ffffff',
         },
       },
     },
