@@ -1,4 +1,13 @@
-import { app, BrowserWindow, shell, screen, ipcMain, globalShortcut } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  shell,
+  screen,
+  ipcMain,
+  globalShortcut,
+  session,
+  desktopCapturer,
+} from 'electron';
 import path from 'node:path';
 import { IPC_CHANNELS } from '@bash/shared';
 import { createSystemTray, destroySystemTray } from './tray';
@@ -133,6 +142,7 @@ if (!gotTheLock) {
         globalShortcut.isRegistered('CommandOrControl+Shift+H')
       );
       console.log('[Main] Test mode: stealth overlay and tray configured successfully!');
+      console.log('[Main] Test mode: display media handler registered successfully!');
       setTimeout(() => {
         console.log('[Main] Test mode: shutting down primary instance cleanly.');
         app.quit();
@@ -162,7 +172,45 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(createWindow);
+  const setupMediaHandlers = (): void => {
+    // Programmatically grant loopback audio and screen capture without user picker modal
+    session.defaultSession.setDisplayMediaRequestHandler(async (_request, callback) => {
+      try {
+        const sources = await desktopCapturer.getSources({ types: ['screen'] });
+        const primarySource = sources[0];
+        if (primarySource) {
+          callback({ video: primarySource, audio: 'loopback' });
+        } else {
+          console.warn('[Main] No screen sources found for display media request.');
+          callback({});
+        }
+      } catch (err) {
+        console.error('[Main] Error handling display media request:', err);
+        callback({});
+      }
+    });
+
+    // Auto-approve media permissions (microphone and display capture) for local renderer
+    session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+      if (permission === 'media' || permission === 'display-capture') {
+        return true;
+      }
+      return false;
+    });
+
+    session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+      if (permission === 'media' || permission === 'display-capture') {
+        callback(true);
+      } else {
+        callback(false);
+      }
+    });
+  };
+
+  app.whenReady().then(async () => {
+    setupMediaHandlers();
+    await createWindow();
+  });
 
   app.on('will-quit', () => {
     // Unregister all shortcuts and destroy tray

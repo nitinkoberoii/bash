@@ -4,11 +4,11 @@
 
 **Architecture Version:** 2.1 (Node.js / Electron Stealth Desktop Architecture)
 
-**Last Updated:** 2026-11-22
+**Last Updated:** 2026-11-23
 
-**Current Phase:** Phase 1 Complete — Gate Verification & Learning Checkpoint
+**Current Phase:** Phase 2 (Dual-Channel Audio Capture & Signal Processing Pipeline) — Milestone 2.1 Complete
 
-**Next Action:** Run Phase 1 Gate Verification & Review Learning Checkpoint, then advance to **Phase 2 (Milestone 2.1: Dual-Channel Audio Capture & Signal Processing Pipeline)**
+**Next Action:** Advance to **Phase 2 — Milestone 2.2 (Stereo Graph & Custom AudioWorkletProcessor: 16000Hz Int16 PCM, 100ms frames)**
 
 > **MANDATORY AI UPDATE PROTOCOL (DEFAULT BEHAVIOR)**
 >
@@ -120,10 +120,11 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
   * **UI Refinement (Transparent Dark IDE Theme):** Replaced default bluish `slate-900` palette with neutral dark IDE glass matching editor background (`#181818` / RGB 24, 24, 24 at $90\%$ opacity with `backdrop-blur-md`), dark inner hint container (`#121212/85`), subtle white borders (`border-white/10` and `border-white/5`), neutral gray typography, and crisp white bold tags for distraction-free peripheral readability.
 
+  * **Completed Milestone 2.1 (System Loopback & Microphone Stream Acquisition):** Configured Electron Main process media handlers (`session.defaultSession.setDisplayMediaRequestHandler`) to programmatically grant system loopback audio (`audio: 'loopback'`) from the primary display and auto-approve media permissions (`media`, `display-capture`) without user picker modals. Implemented `apps/desktop/src/audio/capture.ts` (and re-export hub `index.ts`) acquiring the system loopback `MediaStream` (immediately stopping and removing dummy video tracks to eliminate GPU/rendering overhead) and candidate microphone `MediaStream` (with WebRTC DSP constraints: `echoCancellation`, `noiseSuppression`, `autoGainControl`). Implemented `acquireDualAudioStreams()` with parallel resolution, atomic track cleanup on partial rejection, and a unified `stopAll()` lifecycle teardown function. Verified with 7 passing unit tests (`capture.test.ts`), strict monorepo typecheck, format, and production builds.
+
 * **What We Need to Do Right Now:**
 
-  * Run **Phase 1 Ending Conditions Gate** and discuss the **Phase 1 Learning Checkpoint**.
-  * Advance to **Phase 2 — Milestone 2.1 (System Loopback & Microphone Stream Acquisition)**.
+  * Advance to **Phase 2 — Milestone 2.2 (Stereo Graph & Custom AudioWorkletProcessor)**: route system audio to Channel 0 (Left) and mic to Channel 1 (Right) via `ChannelMergerNode(2)`, downsample to $16000\text{ Hz}$, convert `Float32` to interleaved $16\text{-bit}$ signed PCM (`Int16Array`), and buffer into $100\text{ ms}$ frames ($6.4\text{ KB}$ per frame).
 
 * **Active Blockers / Open Decisions:**
 
@@ -167,9 +168,9 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 
 * `[x]` **Gate:** Phase 1 Ending Conditions (OBS/Meet screen-share invisibility test) & Learning Checkpoint Verified
 
-### Phase 2: Dual-Channel Audio Capture & Signal Processing Pipeline (`Pending`)
+### Phase 2: Dual-Channel Audio Capture & Signal Processing Pipeline (`In Progress`)
 
-* `[ ]` **2.1** — System Audio Loopback (`setDisplayMediaRequestHandler`) & Microphone Acquisition
+* `[x]` **2.1** — System Audio Loopback (`setDisplayMediaRequestHandler`) & Microphone Acquisition
 
 * `[ ]` **2.2** — Stereo `ChannelMergerNode(2)` & `AudioWorkletProcessor` ($16000\text{ Hz}$ `Int16` PCM, $100\text{ ms}$ frames)
 
@@ -258,14 +259,17 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
   * `vite.config.ts` — Vite build and dev configuration utilizing `@vitejs/plugin-react` and `vite-plugin-electron/simple`.
   * `tailwind.config.js` & `postcss.config.js` — Utility CSS configuration defining low-glare dark HUD color tokens and PostCSS plugins.
   * `electron/tray.ts` — Dedicated Windows System Tray controller with in-memory 16x16 icon, toggle visibility/interactive menus, and quit action.
-  * `electron/main.ts` — Main process entry point enforcing single-instance lock, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, global shortcuts (`Ctrl+Shift+H/I/Space/X`), and system tray lifecycle.
+  * `electron/main.ts` — Main process entry point enforcing single-instance lock, top-center monitor positioning, `setContentProtection(true)`, `setIgnoreMouseEvents(true, { forward: true })`, programmatic loopback audio request handler (`session.setDisplayMediaRequestHandler`), media permission auto-approval, global shortcuts (`Ctrl+Shift+H/I/Space/X`), and system tray lifecycle.
   * `electron/preload.ts` — Typed Preload script exposing `window.bashAPI` with `onInteractiveToggle`, `onManualTrigger`, `onClearContext`, and `setClickThrough` via `contextBridge`.
   * `src/main.tsx` — React 19 entry point mounting the root application into `#root`.
   * `src/App.tsx` — Root component orchestrating hotkey event subscriptions and passing state to `OverlayHUD`.
+  * `src/audio/capture.ts` — Dual-channel audio stream acquisition module acquiring Windows system audio loopback (`getDisplayMedia` with automatic dummy video track disposal) and candidate microphone (`getUserMedia` with WebRTC DSP constraints), with parallel resolution and atomic track cleanup on failure.
+  * `src/audio/index.ts` — Re-export barrel for desktop audio capture APIs and type contracts.
   * `src/components/StatusBar.tsx` — Micro-status bar displaying live connection pulse, mode badges (`LOCKED` vs. `INTERACTIVE`), and stealth indicator with explicit `no-drag` styles.
   * `src/components/OverlayHUD.tsx` — Floating frosted-glass HUD card with dynamic `-webkit-app-region: drag` header, hotkey toast notifications, and peripheral scan-optimized hint bullets.
   * `src/index.css` & `index.html` — Transparent background styling and user-select suppression for seamless glass rendering.
   * `src/types/electron.d.ts` — TypeScript ambient declaration attaching typed `bashAPI` to `window`.
+  * `test/capture.test.ts` — Unit test suite verifying system audio loopback acquisition, video track disposal, WebRTC constraint delegation, parallel dual-stream acquisition, and `stopAll()` track termination.
   * `tsconfig.json` — Composite TypeScript project references configuration with DOM and React JSX support.
 
 ### Documentation Artifacts
@@ -298,6 +302,7 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 | `2026-11-22` | `Phase 1 / 1.3` | Built Windows System Tray controller (`electron/tray.ts`), registered global shortcuts (`Ctrl+Shift+H/I/Space/X`), exposed typed listener bridge (`preload.ts`), and wired interactive drag vs click-through mode in `App.tsx` with hotkey toast feedback. | Verified clean: automated launch test verified shortcut registration and tray creation, build passed, and monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with code 0. |
 | `2026-11-22` | `Phase 1 / 1.4` | Decomposed UI into `OverlayHUD.tsx` and `StatusBar.tsx`. Built scan-optimized technical hint layout with peripheral contrast hierarchy, dynamic `-webkit-app-region: drag` header, and transient toast feedback. | Verified clean: production build compiled, monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with 0 errors. Phase 1 ready for gate review. |
 | `2026-11-22` | `Phase 1 / UI Polish` | Updated HUD palette to transparent dark IDE theme matching user editor (`#181818` / RGB 24, 24, 24 with backdrop blur), removing all bluish slate tones in favor of neutral dark glass and crisp white accents. | Verified clean: production build compiled, monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with 0 errors. |
+| `2026-11-23` | `Phase 2 / 2.1` | Implemented dual-channel audio stream acquisition in `apps/desktop/src/audio/capture.ts` (system loopback via `getDisplayMedia` + mic via `getUserMedia`) and configured Electron Main `setDisplayMediaRequestHandler` for zero-prompt loopback capture. | Verified clean: 7 automated unit tests passed in `capture.test.ts` (code 0), production build compiled, monorepo `pnpm format`, `pnpm lint`, and `pnpm typecheck` passed with 0 errors. |
 
 ## 8. Known Issues, Gotchas & Environment Notes
 
@@ -310,3 +315,6 @@ Do **not** reverse these decisions unless explicitly instructed by the user:
 * **Chromium Single-Instance Lockfile Isolation in Automated Tests:** When running automated Electron tests in CI or sandbox commands, passing `--user-data-dir` avoids permissions conflicts on `%APPDATA%` and guarantees clean test isolation.
 * **Windows Notification Area (Tray) Headless Handling:** Windows `Shell_NotifyIconW` gracefully warns if running in non-interactive / headless CI environments; wrapping `tray.ts` with error guards prevents headless test runner crashes while fully activating on user desktop sessions.
 * **Non-Client Drag Trapping (`-webkit-app-region: drag`):** Child interactive buttons and pills inside a draggable header must explicitly declare `-webkit-app-region: no-drag`, otherwise Windows Win32 `WM_NCHITTEST` consumes the mouse click for window movement rather than dispatching React onClick events.
+* **`Promise.all` Partial Rejection Resource Leaks:** When acquiring dual streams concurrently, `[s1, s2] = await Promise.all([p1, p2])` immediately throws if `p2` rejects without assigning the resolved `s1` to any variable, leaking active tracks. Attaching `.then(stream => { s1 = stream; })` handlers before `Promise.all` guarantees acquired hardware tracks are always tracked and cleanly terminated if a companion stream fails.
+* **Node.js 22 `globalThis.navigator` Property Descriptor:** In Node.js 22+, `globalThis.navigator` is defined as a non-writable/getter property. Polyfilling or mocking `navigator` in unit tests requires `Object.defineProperty(globalThis, 'navigator', { value: ..., configurable: true, writable: true })`.
+* **PowerShell 5.1 Command Chaining:** PowerShell 5.1 does not support POSIX `&&` statement separators. Multi-step command pipelines should use `; if ($?) { ... }` or independent steps.
